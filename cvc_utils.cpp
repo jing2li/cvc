@@ -5350,7 +5350,7 @@ void xchange_eo_field(double *phi, int eo) {
   MPI_Request request[220];
   MPI_Status status[220];
 
-  /* t - boundary faces */
+  /* t - boundary faces */  
   MPI_Isend(&phi[0],                                          1, eo_spinor_time_slice_cont, g_nb_t_dn, 183, g_cart_grid, &request[cntr]);
   cntr++;
   MPI_Irecv(&phi[24*Vhalf],                                   1, eo_spinor_time_slice_cont, g_nb_t_up, 183, g_cart_grid, &request[cntr]);
@@ -5360,35 +5360,90 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
   MPI_Irecv(&phi[24*(T+1)*Tslice],                            1, eo_spinor_time_slice_cont, g_nb_t_dn, 184, g_cart_grid, &request[cntr]);
   cntr++;
+  //MPI_Waitall(cntr, request, MPI_STATUS_IGNORE);
 
 #if (defined PARALLELTX) || (defined PARALLELTXY)  || (defined PARALLELTXYZ) 
- 
+  double * send_x = (double *) malloc(sizeof(double) * 24 * Xslice);
+  double * send_x1 = (double *) malloc(sizeof(double) * 24 * Xslice);
+  int i=0;
+  int idx = 0;
+  for (int t=0; t<T; t++){ 
+    for (int y=0; y<LY; y++)
+    for (int z=0; z<LZ/2; z++){
+      for(int s=0; s<24; s++) send_x[i * 24 + s] = phi[idx * 24 + s];
+      idx++;
+    }
+    idx += TXslice; 
+  }
+
   /* x - boundary faces */
-  MPI_Isend(&phi[0],                                          1, eo_spinor_x_slice_vector, g_nb_x_dn, 185, g_cart_grid, &request[cntr]);
+  //MPI_Isend(&phi[0],                                          1, eo_spinor_x_slice_vector, g_nb_x_dn, 185, g_cart_grid, &request[cntr]);
+  MPI_Isend(send_x, 24 * Xslice, MPI_DOUBLE, g_nb_x_dn, 185, g_cart_grid, &request[cntr]);
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*Tslice)],                        1, eo_spinor_x_slice_cont,   g_nb_x_up, 185, g_cart_grid, &request[cntr]);
   cntr++;
 
-  MPI_Isend(&phi[24*(Tslice-TXslice)],                        1, eo_spinor_x_slice_vector, g_nb_x_up, 186, g_cart_grid, &request[cntr]);
+  int j=0;
+  int idx_ = 24*(Tslice-TXslice);
+  for (int t=0; t<T; t++)
+  for (int y=0; y<LY; y++){
+    for (int z=0; z<LZ/2; z++){
+      for (int s=0; s<24; s++)  send_x1[j * 24 + s] = phi[idx_* 24 + s];
+      idx_++;
+    }
+    idx_ += TXYslice; 
+  }
+  //MPI_Isend(&phi[24*(Tslice-TXslice)],                        1, eo_spinor_x_slice_vector, g_nb_x_up, 186, g_cart_grid, &request[cntr]);
+  MPI_Isend(send_x1, 24 * Xslice, MPI_DOUBLE, g_nb_y_up, 186, g_cart_grid, &request[cntr]);
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*Tslice+Xslice)],                 1, eo_spinor_x_slice_cont,   g_nb_x_dn, 186, g_cart_grid, &request[cntr]);
   cntr++;
+  // MPI_Waitall(4, request + 4, MPI_STATUS_IGNORE);
+
+  free(send_x);
+  free(send_x1);
 #endif
 
 
 #if defined PARALLELTXY || (defined PARALLELTXYZ) 
+  double * send_y = (double *) malloc(sizeof(double) * 24 * Yslice);
+  double * send_y1 = (double *) malloc(sizeof(double) * 24 * Yslice);
 
   /* y - boundary faces */
-  MPI_Isend(&phi[0],                                          1, eo_spinor_y_slice_vector, g_nb_y_dn, 187, g_cart_grid, &request[cntr]);
+  int k = 0;
+  int id = 0;
+  for (int t=0; t<T; t++){ 
+    for (int y=0; y<LY; y++)
+    for (int z=0; z<LZ/2; z++){
+      for (int s=0; s<24; s++) send_y[k * 24 + s] = phi[id * 24 + s];
+      id++;
+    }
+    id += TXslice; 
+  }
+  //MPI_Isend(&phi[0],                                          1, eo_spinor_y_slice_vector, g_nb_y_dn, 187, g_cart_grid, &request[cntr]);
+  MPI_Isend(send_y, 24 * Yslice, MPI_DOUBLE, g_nb_y_dn, 187, g_cart_grid, &request[cntr]);
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice))],               1, eo_spinor_y_slice_cont,   g_nb_y_up, 187, g_cart_grid, &request[cntr]);
   cntr++;
 
-  MPI_Isend(&phi[24*( TXslice - TXYslice)],                   1, eo_spinor_y_slice_vector, g_nb_y_up, 188, g_cart_grid, &request[cntr]);
+  int l = 0;
+  int id_ = 0;
+  for (int t=0; t<T; t++){ 
+    for (int y=0; y<LY; y++)
+    for (int z=0; z<LZ/2; z++){
+      for (int s=0; s<24; s++) send_y1[l * 24 + s] = phi[id_ * 24 + s];
+      id_++;
+    }
+    id_ += TXslice; 
+  }
+  //MPI_Isend(&phi[24*( TXslice - TXYslice)],                   1, eo_spinor_y_slice_vector, g_nb_y_up, 188, g_cart_grid, &request[cntr]);
+  MPI_Isend(send_y1, 24 * Yslice, MPI_DOUBLE, g_nb_y_up, 188, g_cart_grid, &request[cntr]);
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice)+Yslice)],        1, eo_spinor_y_slice_cont,   g_nb_y_dn, 188, g_cart_grid, &request[cntr]);
   cntr++;
 
+  free(send_y);
+  free(send_y1);
 #endif
 
 
@@ -5422,18 +5477,49 @@ void xchange_eo_field(double *phi, int eo) {
   MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,   g_nb_z_dn, 192, g_cart_grid, &request[cntr]);
   cntr++;
 #endif
-
+  double * send_z = (double *)malloc(sizeof(double) * 24 * Zslice);
+  double * send_z1 = (double *)malloc(sizeof(double) * 24 * Zslice);
 
   if ( eo == 0 ) {
     /* even field */
+    int const x3 = 0;
+    int m = 0;
+    for(int x0=0; x0 < T;  x0++) {
+    for(int x1=0; x1 < LX; x1++) {
+    for(int x2=0; x2 < LY; x2++) {
+      const int ix  = g_ipt[x0][x1][x2][x3];
+      const int iix = g_lexic2eosub[ix];
+      if(!g_iseven[ix]) continue;
 
-    MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_bwd_slice_struct, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
+      for (int s=0; s<24; s++) {
+        send_z[m * 24 + s] = phi[iix * 24 + s];
+      }
+      i++;
+    }}}
+    //MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_bwd_slice_struct, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
+    MPI_Isend(send_z, Zslice * 24, MPI_DOUBLE, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
+
     cntr++;
 
     MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))],        1, eo_spinor_z_slice_cont,            g_nb_z_up, 189, g_cart_grid, &request[cntr]);
     cntr++;
 
-    MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_fwd_slice_struct, g_nb_z_up, 190, g_cart_grid, &request[cntr]);
+    int const x3_ = LZ-1;
+    int n = 0;
+    for(int x0=0; x0 < T;  x0++) {
+    for(int x1=0; x1 < LX; x1++) {
+    for(int x2=0; x2 < LY; x2++) {
+      const int ix  = g_ipt[x0][x1][x2][x3_];
+      const int iix = g_lexic2eosub[ix];
+      if(!g_iseven[ix]) continue;
+
+      for (int s=0; s<24; s++) {
+        send_z1[n * 24 + s] = phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice) + iix*24 + s];
+      }
+      i++;
+    }}}
+    //MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_fwd_slice_struct, g_nb_z_up, 190, g_cart_grid, &request[cntr]);
+    MPI_Isend(send_z1, Zslice * 24, MPI_DOUBLE,  g_nb_z_up, 190, g_cart_grid, &request[cntr]);
     cntr++;
 
     MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,            g_nb_z_dn, 190, g_cart_grid, &request[cntr]);
@@ -5441,20 +5527,63 @@ void xchange_eo_field(double *phi, int eo) {
 
   } else {
     /* odd field */
+    int const x3 = 0;
+    int i = 0;
+    for(int x0=0; x0 < T;  x0++) {
+    for(int x1=0; x1 < LX; x1++) {
+    for(int x2=0; x2 < LY; x2++) {
+          int const ix  = g_ipt[x0][x1][x2][x3];
+          int const iix = g_lexic2eosub[ix];
+          if(g_iseven[ix]) continue;
 
-    MPI_Isend(&phi[0],                                          1, eo_spinor_z_odd_bwd_slice_struct,  g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
+          for (int s=0; s<24; s++) {
+            send_z[i + s] = phi[iix * 24 + s];
+          }  
+
+          i+=24;
+        }
+      }
+    }
+
+    //MPI_Isend(&phi[0],                                          1, eo_spinor_z_odd_bwd_slice_struct,  g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
+    MPI_Isend(send_z, Zslice * 24, MPI_DOUBLE,  g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
     cntr++;
 
-    MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))],        1, eo_spinor_z_slice_cont,            g_nb_z_up, 189, g_cart_grid, &request[cntr]);
+    //MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))],        1, eo_spinor_z_slice_cont,            g_nb_z_up, 189, g_cart_grid, &request[cntr]);
+    MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))], Zslice * 24, MPI_DOUBLE, g_nb_z_up, 189, g_cart_grid, &request[cntr]);
     cntr++;
 
-    MPI_Isend(&phi[0],                                          1, eo_spinor_z_odd_fwd_slice_struct,  g_nb_z_up, 190, g_cart_grid, &request[cntr]);
+    int const x3_ = LZ-1;
+    i = 0;
+    for(int x0=0; x0 < T;  x0++) {
+    for(int x1=0; x1 < LX; x1++) {
+    for(int x2=0; x2 < LY; x2++) {
+          int const ix  = g_ipt[x0][x1][x2][x3_];
+          int const iix = g_lexic2eosub[ix];
+          if(g_iseven[ix]) continue;
+
+          for (int s=0; s<24; s++) {
+            send_z1[i + s] = phi[iix * 24 + s];
+          }  
+
+          i+=24;
+        }
+      }
+    }
+    
+
+    //MPI_Isend(&phi[0],                                          1, eo_spinor_z_odd_fwd_slice_struct,  g_nb_z_up, 190, g_cart_grid, &request[cntr]);
+    MPI_Isend(send_z1, Zslice * 24, MPI_DOUBLE,  g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
     cntr++;
 
-    MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,            g_nb_z_dn, 190, g_cart_grid, &request[cntr]);
+    //MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,            g_nb_z_dn, 190, g_cart_grid, &request[cntr]);
+    MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], Zslice * 24, MPI_DOUBLE, g_nb_z_up, 189, g_cart_grid, &request[cntr]);
     cntr++;
-
   }
+
+  free(send_z);
+  free(send_z1);
+
 #if 0
 #endif  /* of if 0 */
 

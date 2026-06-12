@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
                 for (int ib=0; ib<24; ib++)
                     fwd_y_tmp[ifl * 12 * 24 * VOL + x * 12 * 24 + ia * 24 + ib] = fwd_y[ifl * 12 * 24 * VOL + ia * 24 + x * 24 + ib];
  */
-    const int n_y = 2;
+    const int n_y = 176;
     const int gsw[4] = {1,1,1,1};
     int *gycoords = (int *)malloc(sizeof(int) * 4 * n_y);
     for (int i=0; i<n_y; i++){
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     double const mmuon = 105.6583745 /* MeV */  / 197.3269804 /* MeV fm */;
     double const alat[2] = { 0.1, 0.00013 };  /* fm */
     //double const xunit[2] = { mmuon * alat[0], mmuon * alat[1] };
-    double const xunit[2] = { .8, 0.1 };
+    double const xunit[2] = { 0.4, 0.1 };
     
     //allocate P1, P23 
     double *P1; // = (double *)malloc(sizeof(double) * 4 * 4 * 4 * T_global);
@@ -80,12 +80,12 @@ int main(int argc, char **argv) {
     cudaHostAlloc((void**)&P23, 64 * n_y * kernel_n * kernel_n_geom * sizeof(double), cudaHostAllocDefault);
     struct QED_kernel_temps kqed_t;
     initialise(&kqed_t);
-    //compute_2p2_gpu(fwd_y, P1, P23, 0, gsw, gycoords, n_y, xunit, kqed_t, VOL, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
+    compute_2p2_gpu(fwd_y, P1, P23, 0, gsw, gycoords, n_y, xunit, kqed_t, VOL, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
     //record_pi_cuda(fwd_y, VOL, 0, T_global, LX_global, LY_global, LZ_global);
-    double *Pi = (double *) malloc(sizeof(double) * 16 * VOL);
+    /*double *Pi = (double *) malloc(sizeof(double) * 16 * VOL);
     srand(1234);
-    for (int i=0; i<16 * VOL; i++) Pi[i] = rand()*2./RAND_MAX - 1.;
-    record_p23_cuda(Pi, n_y, gsw, gycoords, xunit, kqed_t, VOL, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
+    for (int i=0; i<16 * VOL; i++) Pi[i] = rand()*2./RAND_MAX - 1.;*/
+    //record_p23_cuda(Pi, n_y, gsw, gycoords, xunit, kqed_t, VOL, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
     //record_p1_cuda(Pi, 0, gsw, VOL, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
     //record_2p2_cuda(fwd_y, P1, P23, 0, gsw, gycoords, n_y, xunit, kqed_t, VOL, g_proc_coords, g_cart_grid, T_global, LX_global, LY_global, LZ_global, T, LX, LY, LZ);
 
@@ -107,20 +107,23 @@ int main(int argc, char **argv) {
         }
     } */
 
+    /*
     int const y[4] = {1,2,3,4};
     int const gsx[4] = {0,0,0,0};
     double kernel_sum[3] = {0};
-    compute_4pt_gpu(fwd_src, fwd_y, g_dzu[0][0][0], g_dzsu[0][0][0], gsx, 0, xunit, y, kernel_sum, kqed_t, VOL, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
-    
-    //compute_4pt_contraction(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum, kqed_t, VOL);
+    //compute_4pt_gpu(fwd_src, fwd_y, g_dzu[0][0][0], g_dzsu[0][0][0], gsx, 0, xunit, y, kernel_sum, kqed_t, VOL, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
+    double const xv[4] = {0.1, 0.1, 0.1, 10};
+    double const yv[4] = {0.1, 0.1, 0.1, 0.1};
+    test_KQED_on_gpu(xv, yv, kqed_t);
+    compute_4pt_contraction(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum, kqed_t, VOL);
 
     for (int i=0; i<3; i++) {
         printf("kernel_sum[%d] = %.16e\n", i, kernel_sum[i]);
-    }
+    }*/
     cudaFreeHost(P1);
     cudaFreeHost(P23);
     free(gycoords);
-    free(Pi);
+    //free(Pi);
     free(fwd_y);
     free(fwd_src);
 

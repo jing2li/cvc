@@ -1,8 +1,9 @@
 //#include "cvc_linalg.h"
 #include "kernels.h"
 #include "global.h"
+#include "../cvc_utils.h"
 
-#define ny 80 
+#define ny 1 
 
 int main ( int argc, char **argv )
 {
@@ -90,8 +91,31 @@ int main ( int argc, char **argv )
   //check_P1_cuda();
   //check_P23_cuda(g_proc_coords, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
 
-  check_compute_4pt(VOLUME, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
+  //check_compute_4pt(VOLUME, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
 
+  // debug KQEX
+  /* double kerv[6][4][4][4] KQED_ALIGN ;
+  double const xv[4] = {0.1, 0.1, 0.1, 10};
+  double const yv[4] = {0.1, 0.1, 0.1, 0.1};
+  QED_Mkernel_L2(0.4, xv, yv, kqed_t, kerv);
+  // find kerv norm
+  double *k = kerv[0][0][0];
+  double kervnorm = 0;
+  for (int i=0; i<384; i++){
+    // compute norm
+    kervnorm += k[i] * k[i];
+  }
+  printf("kerv norm = %e\n", kervnorm); */
+  double* gauge;
+  gauge = (double *) malloc(sizeof(double) * 4 * 3 * 3 * 2 * VOLUME);
+  for (int i=0; i<72*VOLUME; i++){
+    gauge[i] = rand() * 2. / RAND_MAX - 1; // a random number between -1 and 1
+  }
+  double **mzz[2] = { NULL, NULL }, **mzzinv[2] = { NULL, NULL };
+  cvc::init_clover ( &g_clover, &mzz, &mzzinv, gauge_field_with_phase, g_mu, g_csw );
+  cvc::check_residual_clover(fwd_y, fwd_y, gauge, mzz[0], mzzinv[0], 1);
+
+  free(gauge);
   free(p1_0);
   free(p1_1);
   for (int i=0; i<2; i++) free(spinor_work[i]);

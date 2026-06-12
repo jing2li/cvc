@@ -43,4 +43,6 @@ __host__ void compute_4pt_gpu(
     double* kernel_sum, QED_kernel_temps kqed_t, unsigned VOLUME,
     int const g_proc_coords[4], MPI_Comm g_cart_grid, unsigned T, unsigned LX, unsigned LY, unsigned LZ, 
     unsigned T_global, unsigned LX_global, unsigned LY_global, unsigned LZ_global);
+
+__host__ void test_KQED_on_gpu(const double xv[4], const double yv[4], QED_kernel_temps kqed_t);
 #endif /* _KERNELS_CUH_ */

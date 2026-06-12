@@ -754,12 +754,11 @@ unsigned const T_global, unsigned const LX_global, unsigned const LY_global, uns
             ( gsy[2] - gsw[2] + static_cast<int>(LY_global) ) % static_cast<int>(LY_global),
             ( gsy[3] - gsw[3] + static_cast<int>(LZ_global) ) % static_cast<int>(LZ_global)
         };
-        /* int yv[4];
+        int yv[4];
         site_map_zerohalf ( yv, y, T_global, LX_global, LY_global, LZ_global );
 
-        double const ym[4] = {yv[0] * xunit[0], yv[1] * xunit[0], yv[2] * xunit[0], yv[3] * xunit[0] };
         double const ym_minus[4] = { -yv[0] * xunit[0], -yv[1] * xunit[0], -yv[2] * xunit[0], -yv[3] * xunit[0] };
-         */
+        
         // parallelise over ikernel
         int ikernel = blockIdx.y;
 
@@ -798,7 +797,7 @@ unsigned const T_global, unsigned const LX_global, unsigned const LY_global, uns
             double xm_mi_ym[4] = {xmyv[0] * xunit[0], xmyv[1] * xunit[0], xmyv[2] * xunit[0], xmyv[3] * xunit[0]};
             
 
-            /* double kerv3[6][4][4][4] KQED_ALIGN ;
+            double kerv3[6][4][4][4] KQED_ALIGN ;
             KQED_LX(ikernel, xm_mi_ym, ym_minus, kqed_t, kerv3);
             #pragma unroll
             for (int mu=0; mu<4; mu++)
@@ -821,7 +820,7 @@ unsigned const T_global, unsigned const LX_global, unsigned const LY_global, uns
             
                 // k=5: {2,3}
                 local_p3[2*16 + 3*4 + nu] += kerv3[5][mu][lambda][nu] * pix[mu*4+lambda];
-            } */
+            }
         }
 
         #pragma unroll
@@ -1172,15 +1171,12 @@ __global__ void kernel_4pt(const double * fwd_src, const double * fwd_y,
             int const idx = (threadIdx.x - 48) % 3;
             if (idx == 0) {
                 //set zero
-                kqed_set_zero(kerv[ikernel][0]);
                 KQED_LX(ikernel, xm, ym, kqed_t, kerv[ikernel][0]);
             }
             else if (idx == 1) {
-                kqed_set_zero(kerv[ikernel][1]);
                 KQED_LX(ikernel,  ym, xm, kqed_t, kerv[ikernel][1]);
             }
             else {
-                kqed_set_zero(kerv[ikernel][2]);
                 KQED_LX(ikernel,  xm, xm_mi_ym, kqed_t, kerv[ikernel][2]);
             }
         }
@@ -1222,13 +1218,13 @@ __global__ void kernel_4pt(const double * fwd_src, const double * fwd_y,
                 sum[ikernel] += (kerv[ikernel][0][k][mu][nu][lambda] + kerv[ikernel][1][k][nu][mu][lambda] - kerv[ikernel][2][k][lambda][nu][mu]) * corr_I
                     + kerv[ikernel][2][k][lambda][nu][mu] * corr_II;
             }
-            //if (threadIdx.x==0 && ix==0 && mu==0) {kernel_sum[0] = corr_I; kernel_sum[1] = corr_II; kernel_sum[2]=g_dxu[0][0];}
+            // if (threadIdx.x==0 && ix==0 && mu==0) {kernel_sum[0] = kerv[0][1][0][0][0][0]; kernel_sum[1] = kerv[1][0][2][2][2][2]; kernel_sum[2]=g_dxu[0][0];}
         }
         //double const sum_block = blockReduceSum(sum);
         for (int i=0; i<3; i++) {
             double const sum_block = blockReduceSum(sum[i]);
-            //atomicAdd_system(&kernel_sum[threadIdx.x], sum[threadIdx.x]); 
-            if (threadIdx.x == 0) atomicAdd_system(&kernel_sum[i], sum_block);
+            atomicAdd_system(&kernel_sum[threadIdx.x], sum[threadIdx.x]); 
+            //if (threadIdx.x == 0) atomicAdd_system(&kernel_sum[i], sum_block);
         }
     }
 }
@@ -1269,3 +1265,32 @@ __host__ void compute_4pt_gpu(
     cudaFree(kernel_sum_d);
     return;
   }
+
+
+__global__ void static call_KQED(const double xv[4], const double yv[4], QED_kernel_temps kqed_t, double kerv[4][4][4][4]) {
+    if (threadIdx.x == 0) {
+         QED_Mkernel_L2( 0.4, xv, yv, kqed_t, kerv);
+    }
+    return;
+}
+
+__host__ void test_KQED_on_gpu(const double xv[4], const double yv[4], QED_kernel_temps kqed_t) {
+    double (*kerv)[4][4][4];
+    cudaMalloc((void **)&kerv, sizeof(double)*4*4*4*4);
+    call_KQED<<<1,1>>>(xv, yv, kqed_t, kerv);
+    double h_kerv[4][4][4][4];
+    cudaMemcpy(h_kerv, kerv, sizeof(double)*4*4*4*4, cudaMemcpyDeviceToHost);
+    cudaFree(kerv);
+    // print norm
+    double norm = 0;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            for (int k = 0; k < 4; k++) {
+                for (int l = 0; l < 4; l++) {
+                    norm += h_kerv[i][j][k][l] * h_kerv[i][j][k][l];
+                }
+            }
+        }
+    }
+    printf("Norm of kerv = %e\n", norm);
+}

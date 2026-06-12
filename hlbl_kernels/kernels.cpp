@@ -1232,14 +1232,14 @@ void compute_4pt_0(
     printf("first element of corr_I = %f\n", corr_I[0][0][0][0]);
     printf("first element of corr_II = %f\n", corr_II[0][0][0][0]);
     }
-    /* double const xm_mi_ym[4] = {
+    double const xm_mi_ym[4] = {
       xm[0] - ym[0],
       xm[1] - ym[1],
       xm[2] - ym[2],
-      xm[3] - ym[3] }; */
+      xm[3] - ym[3] };
       
     // wrapped (minimum image)
-    int const x_mi_y[4] = {
+    /* int const x_mi_y[4] = {
       (x[0] - yv[0] + T_global) % T_global,
       (x[1] - yv[1] + LX_global) % LX_global,
       (x[2] - yv[2] + LY_global) % LY_global,
@@ -1251,7 +1251,7 @@ void compute_4pt_0(
       xv_mi_yv[0] * xunit[0],
       xv_mi_yv[1] * xunit[0],
       xv_mi_yv[2] * xunit[0],
-      xv_mi_yv[3] * xunit[0] };
+      xv_mi_yv[3] * xunit[0] }; */
 
 
     /***********************************************************
@@ -1445,9 +1445,9 @@ void compute_4pt(
 
     //contract with QED kernel
     for (int ikernel=0; ikernel<kernel_n; ikernel++){
-      double kerv1[6][4][4][4] KQED_ALIGN ;
-      double kerv2[6][4][4][4] KQED_ALIGN ;
-      double kerv3[6][4][4][4] KQED_ALIGN ;
+      double kerv1[6][4][4][4]={0} KQED_ALIGN ;
+      double kerv2[6][4][4][4]={0} KQED_ALIGN ;
+      double kerv3[6][4][4][4]={0} KQED_ALIGN ;
 
       KQED_LX[ikernel]( xm, ym,       kqed_t, kerv1);
       KQED_LX[ikernel]( ym, xm,       kqed_t, kerv2);
@@ -1491,12 +1491,12 @@ void check_compute_4pt(size_t const vol, int const g_proc_coords[4], MPI_Comm g_
   double kernel_sum_ref[kernel_n] = {0.};
   QED_kernel_temps kqed_t;
   initialise(&kqed_t);
-  double const xunit[2] = {.8, 0.1};
+  double const xunit[2] = {0.4, 0.1};
   int const y[4] = {1,2,3,4};
   int const gsx[4] = {0,0,0,0};
 
-  //compute_4pt_0(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum_ref, kqed_t, vol, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
-  compute_4pt(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum, kqed_t, vol, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);  
+  compute_4pt_0(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum, kqed_t, vol, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);
+  //compute_4pt(fwd_src, fwd_y, g_dzu, g_dzsu, gsx, 0, xunit, y, kernel_sum, kqed_t, vol, g_proc_coords, g_cart_grid, T, LX, LY, LZ, T_global, LX_global, LY_global, LZ_global);  
 
   /* int flag = 0;
   for (int ikernel=0; ikernel<kernel_n; ikernel++){

@@ -15,10 +15,14 @@ MPI_INC_DIR := $(CUDA_HOME)/include
 MPI_LIB_DIR := $(CUDA_HOME)/lib
 
 # Your custom libraries
-CPU_INC  := ../../build_kqed_cpu/include
-CPU_LIB  := ../../build_kqed_cpu/lib
-GPU_INC  := ../../build_kqed_gpu/install_dir/include
-GPU_LIB  := ../../build_kqed_gpu/install_dir/lib
+#CPU_INC  := ../../build_kqed_cpu/include
+#CPU_LIB  := ../../build_kqed_cpu/lib
+CPU_INC  := /capstor/store/cscs/userlab/lp142/ljingjin/build_kqed_cpu/include
+CPU_LIB  := /capstor/store/cscs/userlab/lp142/ljingjin/build_kqed_cpu/lib
+#GPU_INC  := ../../build_kqed_gpu/install_dir/include
+#GPU_LIB  := ../../build_kqed_gpu/install_dir/lib
+GPU_INC  := /capstor/store/cscs/userlab/lp142/ljingjin/build_kqed_gpu/include
+GPU_LIB  := /capstor/store/cscs/userlab/lp142/ljingjin/build_kqed_gpu/lib
 
 # --- LIBRARIES ---
 # Link against MPI and your custom libraries
