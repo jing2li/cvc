@@ -5339,10 +5339,6 @@ void xchange_eo_field(double *phi, int eo) {
   const unsigned int TXYslice =                LZ / 2;
   /* =================================================== */
   int cntr=0;
-/*
-  int i, error_string_length;
-  char error_string[400];
-*/
 
   const unsigned int Zshift_start = eo ? LZ / 2 : 0;
   const unsigned int Zshift_end   = eo ? 0 : LZ / 2;
@@ -5360,18 +5356,21 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
   MPI_Irecv(&phi[24*(T+1)*Tslice],                            1, eo_spinor_time_slice_cont, g_nb_t_dn, 184, g_cart_grid, &request[cntr]);
   cntr++;
-  //MPI_Waitall(cntr, request, MPI_STATUS_IGNORE);
-
-#if (defined PARALLELTX) || (defined PARALLELTXY)  || (defined PARALLELTXYZ) 
   double * send_x = (double *) malloc(sizeof(double) * 24 * Xslice);
   double * send_x1 = (double *) malloc(sizeof(double) * 24 * Xslice);
-  int i=0;
+  double * send_y = (double *) malloc(sizeof(double) * 24 * Yslice);
+  double * send_y1 = (double *) malloc(sizeof(double) * 24 * Yslice);
+  double * send_z = (double *) malloc(sizeof(double) * 24 * Zslice);
+  double * send_z1 = (double *) malloc(sizeof(double) * 24 * Zslice);
+#if (defined PARALLELTX) || (defined PARALLELTXY)  || (defined PARALLELTXYZ) 
+  int p=0;
   int idx = 0;
   for (int t=0; t<T; t++){ 
     for (int y=0; y<LY; y++)
     for (int z=0; z<LZ/2; z++){
-      for(int s=0; s<24; s++) send_x[i * 24 + s] = phi[idx * 24 + s];
+      for(int s=0; s<24; s++) send_x[p * 24 + s] = phi[idx * 24 + s];
       idx++;
+      p++;
     }
     idx += TXslice; 
   }
@@ -5384,12 +5383,13 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
 
   int j=0;
-  int idx_ = 24*(Tslice-TXslice);
+  int idx_ = Tslice-TXslice;
   for (int t=0; t<T; t++)
   for (int y=0; y<LY; y++){
     for (int z=0; z<LZ/2; z++){
       for (int s=0; s<24; s++)  send_x1[j * 24 + s] = phi[idx_* 24 + s];
       idx_++;
+      j++;
     }
     idx_ += TXYslice; 
   }
@@ -5398,7 +5398,6 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*Tslice+Xslice)],                 1, eo_spinor_x_slice_cont,   g_nb_x_dn, 186, g_cart_grid, &request[cntr]);
   cntr++;
-  // MPI_Waitall(4, request + 4, MPI_STATUS_IGNORE);
 
   free(send_x);
   free(send_x1);
@@ -5406,9 +5405,6 @@ void xchange_eo_field(double *phi, int eo) {
 
 
 #if defined PARALLELTXY || (defined PARALLELTXYZ) 
-  double * send_y = (double *) malloc(sizeof(double) * 24 * Yslice);
-  double * send_y1 = (double *) malloc(sizeof(double) * 24 * Yslice);
-
   /* y - boundary faces */
   int k = 0;
   int id = 0;
@@ -5417,6 +5413,7 @@ void xchange_eo_field(double *phi, int eo) {
     for (int z=0; z<LZ/2; z++){
       for (int s=0; s<24; s++) send_y[k * 24 + s] = phi[id * 24 + s];
       id++;
+      k++;
     }
     id += TXslice; 
   }
@@ -5427,11 +5424,12 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
 
   int l = 0;
-  int id_ = 0;
+  int id_ = TXslice - TXYslice;
   for (int t=0; t<T; t++){ 
     for (int y=0; y<LY; y++)
     for (int z=0; z<LZ/2; z++){
       for (int s=0; s<24; s++) send_y1[l * 24 + s] = phi[id_ * 24 + s];
+      l++;
       id_++;
     }
     id_ += TXslice; 
@@ -5441,45 +5439,12 @@ void xchange_eo_field(double *phi, int eo) {
   cntr++;
   MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice)+Yslice)],        1, eo_spinor_y_slice_cont,   g_nb_y_dn, 188, g_cart_grid, &request[cntr]);
   cntr++;
-
-  free(send_y);
-  free(send_y1);
 #endif
 
 
 #if (defined PARALLELTXYZ) 
 
   /* z - boundary faces */
-
-
-#if 0
-  /* 1st half z boundary, backward */
-  MPI_Isend(&phi[24*Zshift_start],                            1, eo_spinor_z_slice_vector, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
-  cntr++;
-  MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))],        1, eo_spinor_z_slice_cont,   g_nb_z_up, 189, g_cart_grid, &request[cntr]);
-  cntr++;
-
-  /* 1st half z boundary, forward */
-  MPI_Isend(&phi[24*Zshift_start],                            1, eo_spinor_z_slice_vector, g_nb_z_dn, 190, g_cart_grid, &request[cntr]);
-  cntr++;
-  MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice))],        1, eo_spinor_z_slice_cont,   g_nb_z_up, 190, g_cart_grid, &request[cntr]);
-  cntr++;
-
-  /* 2nd half z boundary, forward */
-  MPI_Isend(&phi[24*(LZh-1+Zshift_end)],                      1, eo_spinor_z_slice_vector, g_nb_z_up, 191, g_cart_grid, &request[cntr]);
-  cntr++;
-  MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,   g_nb_z_dn, 191, g_cart_grid, &request[cntr]);
-  cntr++;
-
-  /* 2nd half z boundary, backward */
-  MPI_Isend(&phi[24*(LZh-1+Zshift_end)],                      1, eo_spinor_z_slice_vector, g_nb_z_up, 192, g_cart_grid, &request[cntr]);
-  cntr++;
-  MPI_Irecv(&phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice)], 1, eo_spinor_z_slice_cont,   g_nb_z_dn, 192, g_cart_grid, &request[cntr]);
-  cntr++;
-#endif
-  double * send_z = (double *)malloc(sizeof(double) * 24 * Zslice);
-  double * send_z1 = (double *)malloc(sizeof(double) * 24 * Zslice);
-
   if ( eo == 0 ) {
     /* even field */
     int const x3 = 0;
@@ -5494,7 +5459,7 @@ void xchange_eo_field(double *phi, int eo) {
       for (int s=0; s<24; s++) {
         send_z[m * 24 + s] = phi[iix * 24 + s];
       }
-      i++;
+      m++;
     }}}
     //MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_bwd_slice_struct, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
     MPI_Isend(send_z, Zslice * 24, MPI_DOUBLE, g_nb_z_dn, 189, g_cart_grid, &request[cntr]);
@@ -5514,9 +5479,9 @@ void xchange_eo_field(double *phi, int eo) {
       if(!g_iseven[ix]) continue;
 
       for (int s=0; s<24; s++) {
-        send_z1[n * 24 + s] = phi[24*(Vhalf+2*(Tslice+Xslice+Yslice)+Zslice) + iix*24 + s];
+        send_z1[n * 24 + s] = phi[iix*24 + s];
       }
-      i++;
+      n++;
     }}}
     //MPI_Isend(&phi[0],                                          1, eo_spinor_z_even_fwd_slice_struct, g_nb_z_up, 190, g_cart_grid, &request[cntr]);
     MPI_Isend(send_z1, Zslice * 24, MPI_DOUBLE,  g_nb_z_up, 190, g_cart_grid, &request[cntr]);
@@ -5581,8 +5546,12 @@ void xchange_eo_field(double *phi, int eo) {
     cntr++;
   }
 
+  free(send_x);
+  free(send_x1);  
+  free(send_y);
+  free(send_y1);  
   free(send_z);
-  free(send_z1);
+  free(send_z1);  
 
 #if 0
 #endif  /* of if 0 */
