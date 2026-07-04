@@ -174,7 +174,49 @@ add_custom_command(
 
 LIST(APPEND CVC_SRC_HLBL_KERNELS hlbl_kernels/global.cpp hlbl_kernels/kernels.cpp)
 LIST(APPEND CVC_SRC_CUDA hlbl_kernels/kernels.cu)
-LIST(APPEND CVC_SRC_PROGRAM apply_Dtm avgx23_invert_contract avgx_invert_contract avx23_conn_analyse avxg_analyse avxg_analyse_simple avxg_rho_analyse avxn_analyse avxn_conn_analyse calculate_gsp compact compact-block compact-block-3pt cpff_avx_fht_invert_contract cpff_fht_analyse cpff_fht_invert_contract cpff_invert_contract cpff_tbc_invert_contract cpff_threep_analyse cpff_xg_contract cpff_xg_contract_lowmem deflate disc_analyse eta_invert_contract example get_q2_list hlbl_2p2_invert_contract hlbl_invert_contract hlbl_mII_contract_test hlbl_mII_invert_contract hlbl_test_kqed hvp_analyse jj_invert_contract kaon2pt_invert_contract kaon2pt_simple_invert_contract lime2ascii lime2bin ll_caa_lma ll_lma ll_lma_recombine loop_analyse loop_extract loop_extract_plegma loop_invert_contract loops_caa_lma nn_2pt_analyse p2gg p2gg_analyse p2gg_analyse_conn p2gg_analyse_neutral p2gg_analyse_pdisc p2gg_analyse_vdisc p2gg_analyse_wdisc p2gg_caa_lma p2gg_contract p2gg_exdefl_analyse p2gg_exdefl_uwerr_analyse p2gg_factorized p2gg_invert_contract p2gg_invert_contract_local p2gg_lma p2gg_lmimp_analysis p2gg_local p2gg_mixed p2gg_noexdefl p2gg_noexdefl2 p2gg_pspace p2gg_test p2gg_tpspace p2gg_twop_invert_contract_local p2gg_xm p2gg_xspace p2gg_xspace_ama p2gg_xspace_local pppo_invert_contract pv2pt_simple_invert_contract sff_threep_analyse soet_invert_contract stout_smearing_radius test test_gm test_h5_parallel test_invert test_xchanger twop_analyse twop_analyse_wdisc twop_invert_contract twopt_extract twopt_invert_contract twopt_plegma_extract vv2pt_simple_invert_contract xg_analyse xg_exdefl_analyse)
+## avgx23_invert_contract.cpp is excluded: its main loop is gated by
+## #if defined(_STOCH_PROPAGATOR) / #elif defined(_PTA_PROPAGATOR), and
+## neither macro is ever defined anywhere in this repo (not in-file, not via
+## any Makefile or -D flag, past or present) -- there is no evidence this
+## file was ever compiled under any configuration.
+## avxg_rho_analyse.cpp is excluded: it has a systemic _Complex double vs.
+## plain double[2] type-confusion bug (~19 compile errors) and is not
+## referenced by any Makefile_examples/* or the top-level Makefile -- no
+## evidence it was ever compiled under the old build system either.
+## calculate_gsp.cpp is excluded: it calls gsp_init/gsp_fini/
+## gsp_make_eo_phase_field, which only exist inside a #if 0-disabled dead
+## function in gsp.cpp (gsp_calculate_v_dag_gamma_p_w) and are otherwise
+## undefined; not referenced by any Makefile_examples/* or the top-level
+## Makefile either -- no evidence it was ever compiled.
+## The following are excluded: each fails to compile (missing/removed APIs,
+## undefined macros gating unreachable code, or literal "STOPPED HERE"
+## markers in the source) AND is never referenced -- not even in a commented-
+## out PROGRAM line -- by any Makefile_examples/* variant or a top-level
+## Makefile, so there is no evidence any of them was ever built:
+##   hlbl_2p2_invert_contract, hlbl_mII_contract_test, hlbl_test_kqed,
+##   ll_caa_lma, ll_lma, ll_lma_recombine, loops_caa_lma, p2gg,
+##   p2gg_analyse_conn, p2gg_caa_lma, p2gg_factorized, p2gg_lma, p2gg_mixed,
+##   p2gg_noexdefl, p2gg_noexdefl2, p2gg_test, p2gg_tpspace, p2gg_xspace_ama,
+##   pppo_invert_contract
+## hlbl_mII_invert_contract also fails to compile (a KQED/KQED_cuda
+## duplicate-symbol conflict) but IS an active PROGRAM target in
+## Makefile.cuda / Makefile.daint.cuda, so it is kept in the build (as a
+## known, currently-unresolved failure) rather than excluded.
+## cpff_tbc_invert_contract is excluded despite being an active PROGRAM
+## target in Makefile.stoutsmear: it needs invert_quda_direct_theta, whose
+## implementation was permanently removed from tmLQCD's quda_interface.c in
+## 2018 (commit 062080fd, "remove now unnecessary function
+## 'invert_quda_direct_theta' ... integrate ... into the operator parameter
+## setters and getters") -- the stale declaration was simply never cleaned
+## out of quda_interface.h. No QUDA/tmLQCD build configuration can restore
+## it; porting this file onto tmLQCD_get_op_params/tmLQCD_set_op_params
+## would be a real code change, not a build fix.
+## cpff_xg_contract is excluded despite being an active PROGRAM target in
+## Makefile.stoutsmear: it needs tmLQCD_stout_smear_gauge_field, which
+## `git log --all -S` shows was never added to tmLQCD at any point in its
+## history under any name -- an aspirational/never-implemented wrapper
+## function, not something disabled by a build option.
+LIST(APPEND CVC_SRC_PROGRAM apply_Dtm avgx_invert_contract avx23_conn_analyse avxg_analyse avxg_analyse_simple avxn_analyse avxn_conn_analyse compact compact-block compact-block-3pt cpff_avx_fht_invert_contract cpff_fht_analyse cpff_fht_invert_contract cpff_invert_contract cpff_threep_analyse cpff_xg_contract_lowmem deflate disc_analyse eta_invert_contract example get_q2_list hlbl_invert_contract hlbl_mII_invert_contract hvp_analyse jj_invert_contract kaon2pt_invert_contract kaon2pt_simple_invert_contract lime2ascii lime2bin loop_analyse loop_extract loop_extract_plegma loop_invert_contract nn_2pt_analyse p2gg_analyse p2gg_analyse_neutral p2gg_analyse_pdisc p2gg_analyse_vdisc p2gg_analyse_wdisc p2gg_contract p2gg_exdefl_analyse p2gg_exdefl_uwerr_analyse p2gg_invert_contract p2gg_invert_contract_local p2gg_lmimp_analysis p2gg_local p2gg_pspace p2gg_twop_invert_contract_local p2gg_xm p2gg_xspace p2gg_xspace_local pv2pt_simple_invert_contract sff_threep_analyse soet_invert_contract stout_smearing_radius test test_gm test_h5_parallel test_invert test_xchanger twop_analyse twop_analyse_wdisc twop_invert_contract twopt_extract twopt_invert_contract twopt_plegma_extract vv2pt_simple_invert_contract xg_analyse xg_exdefl_analyse)
 
 include_directories(
   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
