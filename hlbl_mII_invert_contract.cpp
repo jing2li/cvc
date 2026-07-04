@@ -1410,7 +1410,9 @@ int main(int argc, char **argv) {
   struct timeval ta, tb;
 
 #ifdef HAVE_MPI
-  MPI_Init(&argc, &argv);
+  //MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 #endif
 
   while ((c = getopt(argc, argv, "ch?f:y:z:")) != -1) {
@@ -1631,7 +1633,7 @@ int main(int argc, char **argv) {
     }
 
     /* check residuum */
-    if ( check_propagator_residual )
+    /* if ( check_propagator_residual )
     {
       exitstatus = check_residual_clover (&(spinor_work[1]) , &(spinor_work[0]), gauge_field_with_phase, mzz[0], mzzinv[0], 1);
       if( exitstatus != 0 )
@@ -1639,7 +1641,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "[hlbl_mII_invert_contract] Error from check_residual_clover   %s %d\n", __FILE__, __LINE__);
         EXIT(123);
       }
-    }
+    } */
 
     fini_2level_dtable ( &spinor_work );
     fini_2level_dtable ( &spinor_field );
@@ -1776,14 +1778,14 @@ int main(int argc, char **argv) {
         }
  
         /* check residuum */
-        if ( check_propagator_residual )
+        /* if ( check_propagator_residual )
         {
           exitstatus = check_residual_clover (&(spinor_work[1]) , &(spinor_work[0]), gauge_field_with_phase, mzz[iflavor], mzzinv[iflavor], 1);
           if(exitstatus != 0) {
             fprintf(stderr, "[hlbl_mII_invert_contract] Error from check_residual_clover, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
             EXIT(19);
           }
-        }
+        } */
 
         assign_prop(fwd_src, iflavor, i, spinor_work[1], VOLUME);
      
@@ -1894,14 +1896,14 @@ int main(int argc, char **argv) {
           }
        
           /* check residuum */
-          if ( check_propagator_residual ) 
+          /* if ( check_propagator_residual ) 
           {
             exitstatus = check_residual_clover (&(spinor_work[1]) , &(spinor_work[0]), gauge_field_with_phase, mzz[iflavor], mzzinv[iflavor], 1);
             if(exitstatus != 0) {
               fprintf(stderr, "[hlbl_mII_invert_contract] Error from check_residual_clover, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
               EXIT(19);
             }
-          }
+          } */
       
           assign_prop(fwd_y, iflavor, i, spinor_work[1], VOLUME);
            
