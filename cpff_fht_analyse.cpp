@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
 
             double * buffer = init_1level_dtable ( 2*T );
 
-            exitstatus = read_from_h5_file ( (void *)buffer, filename, key, io_proc );
+            exitstatus = read_from_h5_file ( (void *)buffer, filename, key, "double", io_proc );
 
             if( exitstatus != 0 ) {
 
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
                   sink_momentum[0], sink_momentum[1], sink_momentum[2] );
               if ( g_verbose > 2 ) fprintf ( stdout, "# [cpff_fht_analyse] key (2) = %s\n", key );
 
-              exitstatus = read_from_h5_file ( (void *)buffer, filename, key, io_proc );
+              exitstatus = read_from_h5_file ( (void *)buffer, filename, key, "double", io_proc );
 
               if( exitstatus != 0 ) {
                 fprintf(stderr, "[cpff_fht_analyse] Error from read_from_h5_file (2), status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
@@ -641,7 +641,7 @@ int main(int argc, char **argv) {
 
                   double * buffer = init_1level_dtable ( 2*T );
  
-                  exitstatus = read_from_h5_file ( (void*)buffer, filename, key, io_proc );
+                  exitstatus = read_from_h5_file ( (void *)buffer, filename, key, "double", io_proc );
                   if( exitstatus != 0 ) {
                     fprintf(stderr, "[cpff_fht_analyse] Error from read_from_h5_file, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
                     EXIT(105);
@@ -670,7 +670,7 @@ int main(int argc, char **argv) {
 
                   if ( g_verbose > 2 ) fprintf ( stdout, "# [cpff_fht_analyse] key = %s\n", key );
 
-                  exitstatus = read_from_h5_file ( (void*)buffer, filename, key, io_proc );
+                  exitstatus = read_from_h5_file ( (void *)buffer, filename, key, "double", io_proc );
                   if( exitstatus != 0 ) {
                     fprintf(stderr, "[cpff_fht_analyse] Error from read_from_h5_file, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
                     EXIT(105);

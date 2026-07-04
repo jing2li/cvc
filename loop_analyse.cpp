@@ -43,6 +43,7 @@
 #include "project.h"
 #include "table_init_z.h"
 #include "table_init_d.h"
+#include "table_init_i.h"
 #include "dummy_solver.h"
 #include "Q_phi.h"
 #include "clover.h"
@@ -185,11 +186,28 @@ int main(int argc, char **argv) {
     if (io_proc == 2 && g_verbose > 1 ) fprintf ( stdout, "# [loop_analyse] number of momenta <= %3d is %3d\n", Qsq, g_sink_momentum_number );
   }
 
-  exitstatus = loop_get_momentum_list_from_h5_file ( g_sink_momentum_list, filename, g_sink_momentum_number, io_proc );
+  /* g_sink_momentum_list is a fixed-size int[][3] global, not an int**, so
+   * it cannot be passed directly to loop_get_momentum_list_from_h5_file,
+   * which fills a dynamically allocated momentum list; read into a local
+   * buffer instead and copy the result back. */
+  int ** sink_momentum_list_buffer = init_2level_itable ( g_sink_momentum_number, 3 );
+  if ( sink_momentum_list_buffer == NULL ) {
+    fprintf ( stderr, "[loop_analyse] Error from init_2level_itable %s %d\n", __FILE__, __LINE__ );
+    EXIT(1);
+  }
+
+  exitstatus = loop_get_momentum_list_from_h5_file ( sink_momentum_list_buffer, filename, g_sink_momentum_number, io_proc );
   if ( exitstatus != 0 ) {
     fprintf ( stderr, "[] Error from loop_get_momentum_list_from_h5_file, status was %d %s %d\n", exitstatus, __FILE__, __LINE__ );
     EXIT(1);
   }
+
+  for ( int imom = 0; imom < g_sink_momentum_number; imom++ ) {
+    g_sink_momentum_list[imom][0] = sink_momentum_list_buffer[imom][0];
+    g_sink_momentum_list[imom][1] = sink_momentum_list_buffer[imom][1];
+    g_sink_momentum_list[imom][2] = sink_momentum_list_buffer[imom][2];
+  }
+  fini_2level_itable ( &sink_momentum_list_buffer );
 
   if ( g_verbose > 2 && io_proc == 2 ) {
     for ( int imom = 0; imom < g_sink_momentum_number; imom++ ) {

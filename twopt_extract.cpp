@@ -321,7 +321,7 @@ int main(int argc, char **argv) {
 
         if ( g_verbose > 2 ) fprintf( stdout, "# [twopt_extract] data_tag = %s\n", data_tag);
 
-        exitstatus = read_from_h5_file ( twopt[0], data_filename, data_tag, io_proc );
+        exitstatus = read_from_h5_file ( twopt[0], data_filename, data_tag, "double", io_proc );
         if ( exitstatus != 0 ) {
           fprintf ( stderr, "[twopt_extract] Error from loop_read_from_h5_file, status was %d %s %d\n", exitstatus, __FILE__, __LINE__ );
           EXIT(1);

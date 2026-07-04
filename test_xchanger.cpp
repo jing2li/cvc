@@ -52,6 +52,7 @@ extern "C"
 #include "clover.h"
 #include "ranlxd.h"
 #include "Q_clover_phi.h"
+#include "gluon_operators.h"
 
 using namespace cvc;
 
