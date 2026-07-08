@@ -1524,7 +1524,7 @@ int main(int argc, char **argv) {
           int const dim[2] = { num_conf, T_global };
           int **  momentum_list = init_2level_itable ( g_sink_momentum_number, 3 );
           memcpy ( momentum_list[0], g_sink_momentum_list[0], g_sink_momentum_number * 3 * sizeof(int) );
-          antisymmetric_orbit_average_spatial ( data, pgg[k], dim, g_sink_momentum_number, momentum_list, ireim );
+          antisymmetric_orbit_average_spatial ( data, pgg[k], dim, g_sink_momentum_number, momentum_list, ireim, 1 );
           fini_2level_itable ( &momentum_list );
 
           char obs_name[100];

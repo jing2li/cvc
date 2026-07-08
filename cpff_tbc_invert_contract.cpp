@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
   /***************************************************************************
    * initialize MPI parameters for cvc
    ***************************************************************************/
-  exitstatus = tmLQCD_invert_init(argc, argv, 1);
+  exitstatus = tmLQCD_invert_init(argc, argv, 1, 0);
   if(exitstatus != 0) {
     EXIT(1);
   }
@@ -457,7 +457,7 @@ int main(int argc, char **argv) {
         }
 
         if ( check_propagator_residual ) {
-          check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_dn], 1 );
+          check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_dn], mzzinv[op_id_dn], 1 );
         }
 
         memcpy( stochastic_propagator_mom_list[isource_location][isample][imom], spinor_work[1], sizeof_spinor_field);
@@ -588,7 +588,7 @@ int main(int argc, char **argv) {
         }
 
         if ( check_propagator_residual ) {
-          check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_dn], 1 );
+          check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_dn], mzzinv[op_id_dn], 1 );
         }
 
         memcpy( stochastic_propagator_zero_list[isource_location][isample], spinor_work[1], sizeof_spinor_field);
@@ -841,7 +841,7 @@ int main(int argc, char **argv) {
               }
 
               if ( check_propagator_residual ) {
-                check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_up], 1 );
+                check_residual_clover ( &(spinor_work[1]), &(spinor_work[0]), gauge_field_with_phase, mzz[op_id_up], mzzinv[op_id_up], 1 );
               }
 
               memcpy( sequential_propagator_list[0], spinor_work[1], sizeof_spinor_field );

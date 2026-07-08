@@ -214,7 +214,16 @@ int main(int argc, char **argv) {
     fprintf(stdout, "# [p2gg_xm] using aff version %s\n", aff_status_str);
   }
 
-  plan_p = fftw_create_plan(T_global, FFTW_BACKWARD, FFTW_MEASURE);
+  {
+    /* FFTW3 plans are tied to the arrays passed at creation time unless
+     * created with FFTW_ESTIMATE, which is required here since this plan
+     * is reused via fftw_execute_dft() on many different buffers below */
+    fftw_complex *dummy_in  = (fftw_complex*)fftw_malloc( T_global * sizeof(fftw_complex) );
+    fftw_complex *dummy_out = (fftw_complex*)fftw_malloc( T_global * sizeof(fftw_complex) );
+    plan_p = fftw_plan_dft_1d(T_global, dummy_in, dummy_out, FFTW_BACKWARD, FFTW_ESTIMATE);
+    fftw_free(dummy_in);
+    fftw_free(dummy_out);
+  }
 
 
   sprintf(outfile_prefix, "p2gg_%s", mode_tag);
@@ -354,7 +363,7 @@ int main(int argc, char **argv) {
             for( int nu = 0; nu < 4; nu++ ) {
    
               /* FT */
-              fftw_one(plan_p, (fftw_complex*)(aff_buffer[mu][nu]), (fftw_complex*)(p2gg_buffer[mu][nu]) );
+              fftw_execute_dft(plan_p, (fftw_complex*)(aff_buffer[mu][nu]), (fftw_complex*)(p2gg_buffer[mu][nu]) );
 
               for ( int it = 0; it < T_global; it++ ) {
                 p4[0] = 2. * M_PI * it / (double)T_global;
@@ -458,6 +467,7 @@ int main(int argc, char **argv) {
 
 
   free_geometry();
+  fftw_destroy_plan(plan_p);
 
 #ifdef HAVE_MPI
   mpi_fini_datatypes();

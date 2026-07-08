@@ -95,6 +95,8 @@ int main(int argc, char **argv) {
   double phase=0.;
   int LLBase[4];
   FILE *ofs;
+  double contact_term[8];
+  double Usourcebuff[72], *Usource[4];
 
 #ifdef HAVE_MPI
   int *status;
@@ -143,7 +145,7 @@ int main(int argc, char **argv) {
   /*********************************
    * initialize MPI parameters for cvc
    *********************************/
-  exitstatus = tmLQCD_invert_init(argc, argv, 1);
+  exitstatus = tmLQCD_invert_init(argc, argv, 1, 0);
   if(exitstatus != 0) {
     EXIT(14);
   }

@@ -35,6 +35,7 @@
 #include "cvc_utils.h"
 #include "mpi_init.h"
 #include "matrix_init.h"
+#include "table_init_z.h"
 #include "project.h"
 #include "Q_phi.h"
 #include "Q_clover_phi.h"
@@ -58,9 +59,9 @@ int vdag_w_reduce_write (
   static const size_t sizeof_eo_spinor_field = _GSI( Vhalf ) * sizeof(double);
   static const size_t sizeof_eo_spinor_field_timeslice = _GSI( VOL3half ) * sizeof(double);
 
-  double _Complex ** V_ts = init_2level_ztable ( dimV, 12 * (size_t)VOL3half );
-  double _Complex ** W_ts = init_2level_ztable ( dimV, 12 * (size_t)VOL3half );
-  if ( V_ts == NULL || W_ts == NULL ) {
+  double _Complex ** V_ts_local = init_2level_ztable ( dimV, 12 * (size_t)VOL3half );
+  double _Complex ** W_ts_local = init_2level_ztable ( dimV, 12 * (size_t)VOL3half );
+  if ( V_ts_local == NULL || W_ts_local == NULL ) {
     fprintf(stderr, "[vdag_w_reduce_write] Error frominit_2level_ztable %s %d\n", __FILE__, __LINE__);
     return(1);
   }
@@ -77,8 +78,8 @@ int vdag_w_reduce_write (
   int BLAS_LDA = BLAS_K;
   int BLAS_LDB = BLAS_K;
   int BLAS_LDC = BLAS_M;
-  double _Complex *BLAS_A = V_ts[0];
-  double _Complex *BLAS_B = W_ts[0];
+  double _Complex *BLAS_A = V_ts_local[0];
+  double _Complex *BLAS_B = W_ts_local[0];
   double _Complex *BLAS_C = NULL;
   double _Complex *contr_allt_buffer = NULL;
 
@@ -86,8 +87,8 @@ int vdag_w_reduce_write (
 
     /* copy timslice of V  */
     unsigned int offset = _GSI(VOL3half) * it;
-    for( int i=0; i<dimV; i++ ) memcpy( V_ts[i], (double*)(V[i])+offset, sizeof_eo_spinor_field_timeslice );
-    for( int i=0; i<dimW; i++ ) memcpy( W_ts[i], (double*)(W[i])+offset, sizeof_eo_spinor_field_timeslice );
+    for( int i=0; i<dimV; i++ ) memcpy( V_ts_local[i], (double*)(V[i])+offset, sizeof_eo_spinor_field_timeslice );
+    for( int i=0; i<dimW; i++ ) memcpy( W_ts_local[i], (double*)(W[i])+offset, sizeof_eo_spinor_field_timeslice );
 
     BLAS_C = contr[it][0];
 
@@ -151,8 +152,8 @@ int vdag_w_reduce_write (
 #endif
   }
 
-  fini_2level_ztable ( &V_ts );
-  fini_2level_ztable ( &W_ts );
+  fini_2level_ztable ( &V_ts_local );
+  fini_2level_ztable ( &W_ts_local );
   return(0);
 }  /* end of vdag_w_reduce_write */
 
@@ -287,7 +288,7 @@ int contract_vdag_gloc_w_blocked (double**V, int numV, int momentum_number, int 
     for( int im=0; im<momentum_number; im++ ) {
   
       /* make odd phase field */
-      make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+      make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
       /* calculate the propagators including current Fourier phase */
       for( int i=0; i < block_size; i++ ) {
@@ -417,7 +418,7 @@ int contract_vdag_gloc_w_blocked (double**V, int numV, int momentum_number, int 
     for( int im=0; im<momentum_number; im++ ) {
   
       /* make odd phase field */
-      make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+      make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
       /* calculate the propagators including current Fourier phase */
       for( int i=0; i < block_size; i++) {
@@ -762,7 +763,7 @@ int contract_vdag_gloc_phi_blocked (double**V, double**Phi, int numV, int numPhi
     for( int im=0; im<momentum_number; im++ ) {
   
       /* make odd phase field */
-      make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+      make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
       /* calculate the propagators including current Fourier phase */
       for( int i=0; i < block_size; i++ ) {
@@ -804,7 +805,7 @@ int contract_vdag_gloc_phi_blocked (double**V, double**Phi, int numV, int numPhi
     for( int im=0; im<momentum_number; im++ ) {
   
       /* make odd phase field */
-      make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+      make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
       /* calculate the propagators including current Fourier phase */
       for( int i=0; i < block_size; i++ ) {
@@ -1276,7 +1277,7 @@ int contract_vdag_cvc_w_blocked (
           /************************************************
            * make odd phase field
            ************************************************/
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /************************************************
            * multiply by momentum phase
@@ -1350,7 +1351,7 @@ int contract_vdag_cvc_w_blocked (
         for( int im=0; im<momentum_number; im++ ) {
   
           /* make odd phase field */
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /* multiply by momentum phase */
           for( int i=0; i < block_size; i++) {
@@ -1628,7 +1629,7 @@ int contract_vdag_cvc_phi_blocked (double**V, double**Phi, int numV, int numPhi,
         for( int im=0; im<momentum_number; im++ ) {
   
           /* make odd phase field */
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /* multiply by momentum phase */
           for( int i=0; i < block_size; i++) {
@@ -1744,7 +1745,7 @@ int contract_vdag_cvc_phi_blocked (double**V, double**Phi, int numV, int numPhi,
         for( int im=0; im<momentum_number; im++ ) {
   
           /* make odd phase field */
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /* multiply by momentum phase */
           for( int i=0; i < block_size; i++) {
@@ -1824,7 +1825,7 @@ int contract_vdag_cvc_phi_blocked (double**V, double**Phi, int numV, int numPhi,
         for( int im=0; im<momentum_number; im++ ) {
   
           /* make odd phase field */
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /* multiply by momentum phase */
           for( int i=0; i < block_size; i++) {
@@ -1882,7 +1883,7 @@ int contract_vdag_cvc_phi_blocked (double**V, double**Phi, int numV, int numPhi,
         for( int im=0; im<momentum_number; im++ ) {
 
           /* make odd phase field */
-          make_eo_phase_field_sliced3d ( phase_field, momentum_list[im], 1);
+          make_eo_phase_field_sliced3d ( phase_field, const_cast<int*>(momentum_list[im]), 1);
 
           /* multiply by momentum phase */
           for( int i=0; i < block_size; i++) {

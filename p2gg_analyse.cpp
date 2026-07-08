@@ -1642,7 +1642,7 @@ int main(int argc, char **argv) {
           double ** data = init_2level_dtable ( num_conf, T_global );
  
           int const dim[2] = { num_conf, T_global };
-          antisymmetric_orbit_average_spatial ( data, pgg_src_avg, dim, sink_momentum_number, sink_momentum_list, ireim );
+          antisymmetric_orbit_average_spatial ( data, pgg_src_avg, dim, sink_momentum_number, sink_momentum_list, ireim, 1 );
 
           char obs_name[100];
           sprintf ( obs_name, "pgg_conn.%s.orbit.QX%d_QY%d_QZ%d.g%d.t%d.PX%d_PY%d_PZ%d.%s", pgg_operator_type_tag[operator_type],

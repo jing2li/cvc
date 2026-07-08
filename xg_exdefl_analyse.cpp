@@ -1065,7 +1065,7 @@ int main(int argc, char **argv) {
           /* UWerr parameters */
           int narg          = ( 2 * T_global + 1 ) * T_global;
           int * arg_first = init_1level_itable ( narg );
-          int arg_first[2]  = { 0, T_global };
+          //int arg_first[2]  = { 0, T_global };
 
           int * arg_stride = init_1level_itable ( narg );
           for ( int i = 0; i < T_global; i++ ) arg_stride[i] = 1;
@@ -1074,8 +1074,8 @@ int main(int argc, char **argv) {
 
 
           fini_2level_dtable ( &data );
-          fini_1level_dtable ( &arg_first );
-          fini_1level_dtable ( &arg_stride );
+          fini_1level_itable ( &arg_first );
+          fini_1level_itable ( &arg_stride );
         }
 
         fini_3level_dtable ( &threep_44 );

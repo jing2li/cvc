@@ -3,6 +3,28 @@
  * product
  ***********************************************************/
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <complex.h>
+#include <math.h>
+#include <time.h>
+#include "ranlxd.h"
+#include "iblas.h"
+#include "ilinalg.h"
+#include "cvc_linalg.h"
+#include "global.h"
+#include "cvc_geometry.h"
+#include "mpi_init.h"
+#include "cvc_utils.h"
+#include "rotations.h"
+#include "table_init_i.h"
+#include "table_init_c.h"
+#include "table_init_z.h"
+#include "group_projection.h"
+
+namespace cvc {
+
 void product_vector_printf ( double _Complex *v, int*dim, int n, char*name, FILE*ofs ) {
 
   const double eps = 9.e-15;
@@ -633,6 +655,8 @@ int rot_mat_table_rotate_multiplett_product (
 
   return(0);
 }  // end of rot_mat_table_rotate_multiplett_product
+
+}  // end of namespace cvc
 
 /***********************************************************/
 /***********************************************************/
