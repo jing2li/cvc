@@ -172,8 +172,10 @@ add_custom_command(
   DEPENDS "${CMAKE_SOURCE_DIR}/.git/HEAD" "${CMAKE_SOURCE_DIR}/.git/index"
   COMMENT "Generating gitversion.cpp from current git HEAD")
 
-LIST(APPEND CVC_SRC_HLBL_KERNELS hlbl_kernels/global.cpp hlbl_kernels/kernels.cpp)
-LIST(APPEND CVC_SRC_CUDA hlbl_kernels/kernels.cu)
+if (NOT CVC_USE_CUDA)
+  LIST(APPEND CVC_SRC_HLBL_KERNELS hlbl_kernels/kernels.cpp)
+endif()
+LIST(APPEND CVC_SRC_CUDA hlbl_kernels/kernels.cu cuda_lattice.cu)
 ## avgx23_invert_contract.cpp is excluded: its main loop is gated by
 ## #if defined(_STOCH_PROPAGATOR) / #elif defined(_PTA_PROPAGATOR), and
 ## neither macro is ever defined anywhere in this repo (not in-file, not via
@@ -262,7 +264,7 @@ target_link_libraries(cvc
   MPI::MPI_CXX>
   $<$<BOOL:${CVC_USE_OPENMP}>:OpenMP::OpenMP_C
   OpenMP::OpenMP_CXX>
-  $<$<BOOL:${CVC_USE_KQED}>:KQED>
+  $<$<AND:$<BOOL:${CVC_USE_KQED}>,$<NOT:$<BOOL:${CVC_USE_CUDA}>>>:KQED>
   $<$<AND:$<BOOL:${CVC_USE_KQED}>,$<BOOL:${CVC_USE_CUDA}>>:KQED_cuda>
   $<$<BOOL:${CVC_USE_LHPC_AFF}>:lhpc-aff>
   $<$<BOOL:${CVC_USE_FFTW}>:cvc::fftw3>
@@ -271,6 +273,14 @@ target_link_libraries(cvc
   LAPACK::LAPACK
   BLAS::BLAS
   m)
+
+# hlbl_mII_invert_contract.cpp (and any other .cpp consumer) needs KQED.h's
+# host-side declarations (QED_kernel_temps, initialise(), ...) regardless of
+# CVC_USE_CUDA, even though the KQED *library* is only linked for CPU builds
+# above -- pull in just its include path here so compilation still finds it
+# in GPU builds without re-adding libKQED.a to the link line.
+target_include_directories(cvc PUBLIC
+  $<$<BOOL:${CVC_USE_KQED}>:$<TARGET_PROPERTY:KQED,INTERFACE_INCLUDE_DIRECTORIES>>)
 
 target_compile_definitions(
   # iblas.h mangles the LAPACK/BLAS symbol names it declares (zgemm, zgemv,
@@ -286,7 +296,7 @@ target_compile_definitions(
   $<$<BOOL:${CVC_USE_OPENMP}>:HAVE_OPENMP>
   $<$<BOOL:${CVC_USE_HDF5}>:HAVE_HDF5>
   $<$<BOOL:${CVC_USE_QUDA}>:TM_USE_QUDA>
-  $<$<BOOL:${CVC_USE_CUDA}>:GPU_DIRECT_SOLVER>
+  $<$<BOOL:${CVC_USE_CUDA}>:GPU_DIRECT_SOLVER HAVE_CUDA USE_CUDA>
   $<$<BOOL:${CVC_USE_KQED}>:HAVE_KQED>
   $<$<BOOL:${CVC_USE_HDF5}>:HAVE_HDF5>
 )

@@ -1014,8 +1014,12 @@ int point_to_all_fermion_propagator_clover_full2eo ( double **eo_spinor_field_e,
     if ( source_proc_id == g_cart_id ) {
       spinor_work[0][ _GSI( g_ipt[local_source_coords[0]][local_source_coords[1]][local_source_coords[2]][local_source_coords[3]])+2*i ] = 1.;
     }
-
-    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], op_id );
+#if HAVE_CUDA
+    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], op_id);
+#else
+    int const write_prop = 0;
+    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], op_id, write_prop);
+#endif
     if(exitstatus < 0) {
       fprintf(stderr, "[point_to_all_fermion_propagator_clover_full2eo] Error from tmLQCD_invert, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
       EXIT(19);

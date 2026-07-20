@@ -175,7 +175,7 @@ const int idx_comb[6][2] = {
   {1,3},
   {2,3} };
 
-
+int const write_prop = 0;
 
 #ifdef USE_CUDA
 #  ifndef HAVE_CUDA
@@ -1626,7 +1626,11 @@ int main(int argc, char **argv) {
     /* full_spinor_work[1] = D^-1 full_spinor_work[0],
      * flavor id 0 
      */
-    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], 0 );
+#if HAVE_CUDA
+    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], 0);
+#else
+    exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], 0 , write_prop);
+#endif
     if(exitstatus < 0) {
       fprintf(stderr, "[hlbl_mII_invert_contract] Error from _TMLQCD_INVERT, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
       EXIT(19);
@@ -1769,9 +1773,11 @@ int main(int argc, char **argv) {
         {
           spinor_work[0][_GSI(g_ipt[sx[0]][sx[1]][sx[2]][sx[3]]) + 2*i ] = 1.;
         }
-
-        exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor );
-
+#if HAVE_CUDA
+        exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor);
+#else
+        exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor , write_prop);
+#endif
         if(exitstatus < 0) {
           fprintf(stderr, "[hlbl_mII_invert_contract] Error from _TMLQCD_INVERT, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
           EXIT(19);
@@ -1887,9 +1893,11 @@ int main(int argc, char **argv) {
           {
             spinor_work[0][_GSI(g_ipt[sy[0]][sy[1]][sy[2]][sy[3]]) + 2*i ] = 1.;
           }
-
-          exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor );
-    
+#if HAVE_CUDA
+          exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor);
+#else
+          exitstatus = _TMLQCD_INVERT ( spinor_work[1], spinor_work[0], iflavor , write_prop);
+#endif
           if(exitstatus < 0) {
             fprintf(stderr, "[hlbl_mII_invert_contract] Error from _TMLQCD_INVERT, status was %d %s %d\n", exitstatus, __FILE__, __LINE__);
             EXIT(19);
